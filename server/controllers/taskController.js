@@ -1,21 +1,36 @@
 const { Task } = require('../models/models');
 const ApiError = require('../errors/ApiError');
+const sequelize = require('../db');
 
 const getAllTasks = async (req, res, next) => {
   let { page, sortWord, sortDir } = req.query;
   page = page || 1;
+  sortWord = sortWord || 'id';
+  sortDir = sortDir || 'up';
   const limit = 3;
   const offset = (page - 1) * limit;
-  let order = [[['id', 'ASC']]];
-  if (sortWord && sortWord !== 'isDone') {
-    order.unshift([sortWord, sortDir === 'up' ? 'ASC' : 'DESC'])
+
+  let order;
+  if (sortWord === 'id') {
+    order = [
+      [sortWord, sortDir === 'up' ? 'ASC' : 'DESC'],
+    ];
   } else if (sortWord === 'isDone') {
-    order.unshift([sortWord, sortDir === 'up' ? 'DESC' : 'ASC'])
+    order = [
+      [sortWord, sortDir === 'up' ? 'DESC' : 'ASC'],
+      ['id', 'ASC']
+    ];
+  } else {
+    order = [
+      [sequelize.fn('lower', sequelize.col(sortWord)), sortDir === 'up' ? 'ASC' : 'DESC'],
+      ['id', 'ASC']
+    ];
   }
-  const data = await Task.findAll({ order, limit, offset });
+
+  const tasks = await Task.findAll({ order, limit, offset });
   const count = await Task.count();
   const numOfPages = Math.ceil(count / 3);
-  return res.json({ count, numOfPages, data });
+  return res.json({ count, numOfPages, tasks });
 }
 
 const createTask = async (req, res, next) => {

@@ -13,22 +13,22 @@ const generateJwt = (id, name, role) => {
 
 class adminController {
   async login(req, res, next) {
-    const {name, password} = req.body
-    const user = await User.findOne({where: {name}})
+    const {name, password} = req.body;
+    const user = await User.findOne({where: {name}});
     if (!user) {
-        return next(ApiError.internal('Пользователь не найден'))
+        return next(ApiError.internal('Пользователь не найден'));
     }
-    let comparePassword = bcrypt.compareSync(password, user.password)
+    let comparePassword = bcrypt.compareSync(password, user.password);
     if (!comparePassword) {
-        return next(ApiError.internal('Указан неверный пароль'))
+        return next(ApiError.internal('Указан неверный пароль'));
     }
-    const token = generateJwt(user.id, user.name, user.role)
-    return res.json({token})
+    const token = generateJwt(user.id, user.name, user.role);
+    return res.json({token});
   }
   
   async check(req, res, next) {
-    const token = generateJwt(req.user.id, req.user.name, req.user.role)
-    return res.json({token})
+    const token = generateJwt(req.user.id, req.user.name, req.user.role);
+    return res.json({token});
   }
 }
 
